@@ -53,14 +53,11 @@ let
     type = protocol;
     server = server;
   };
-  mkDirectDns = server: if builtins.isString server then mkDns server directDnsTag "udp" else server;
+  mkDirectDns = server: mkDns server directDnsTag "udp";
   mkProxiedDns =
     server:
-    let
-      server = mkDirectDns server;
-    in
     {
-      inherit server;
+      server = mkDirectDns server;
       detour = proxiedRouteTag;
     };
 in
@@ -76,6 +73,28 @@ in
       default = "warn";
       description = "Log level for sing-box service.";
     };
+    dns = {
+      proxied = lib.mkOption {
+        type = lib.types.listOf (
+          lib.types.str # Will allow passing attributes as well
+        );
+        description = "List of proxied DNS servers for sing-box";
+        default = [
+          "1.1.1.1"
+          "8.8.8.8"
+        ];
+      };
+      direct = lib.mkOption {
+        type = lib.types.listOf (
+          lib.types.str # Will allow passing attributes as well
+        );
+        description = "List of direct DNS servers for sing-box";
+        default = [
+          "114.114.114.114"
+          "223.5.5.5"
+        ];
+      };
+    };
     socks_port = lib.mkOption {
       type = lib.types.int;
       default = 7890;
@@ -90,24 +109,10 @@ in
       networks = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         description = "List of IP networks assigned to the TUN interface.";
-      };
-      dns = {
-        proxied = lib.mkOption {
-          type = lib.types.listOf (
-            lib.types.oneOf [
-              lib.types.str # Will allow passing attributes as well
-            ]
-          );
-          description = "List of proxied DNS servers for sing-box";
-        };
-        direct = lib.mkOption {
-          type = lib.types.listOf (
-            lib.types.oneOf [
-              lib.types.str # Will allow passing attributes as well
-            ]
-          );
-          description = "List of direct DNS servers for sing-box";
-        };
+        default = [
+          "192.168.200.1/30"
+          "fd00:abcd::/64"
+        ];
       };
     };
   };
@@ -128,7 +133,7 @@ in
         dns = {
           servers =
             (builtins.map mkDirectDns config.proxy.dns.direct)
-            + (builtins.map mkProxiedDns config.proxy.dns.proxied);
+            ++ (builtins.map mkProxiedDns config.proxy.dns.proxied);
           rules = [
             {
               rule_set = directSiteRuleSets;
@@ -149,7 +154,7 @@ in
               action = "hijack-dns";
             }
             {
-              rule_set = directSiteRuleSets + directIpRuleSets;
+              rule_set = directSiteRuleSets ++ directIpRuleSets;
               invert = true;
               action = "route";
               outbound = proxiedRouteTag;

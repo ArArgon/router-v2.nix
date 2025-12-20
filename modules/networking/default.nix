@@ -24,15 +24,25 @@
         ];
         description = "List of physical interfaces to include in the LAN bridge.";
       };
-      subnet = lib.mkOption {
-        type = lib.types.int;
-        default = 24;
-        description = "Subnet prefix length for the LAN network.";
-      };
       addresses = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
-        default = [ "192.168.88.3" ];
-        description = "List of IP addresses for the LAN bridge.";
+        type = lib.types.listOf (
+          lib.types.submodule {
+            options.address = lib.mkOption {
+              type = lib.types.str;
+              description = "IPv4 address assigned to the LAN bridge.";
+            };
+            options.prefixLength = lib.mkOption {
+              type = lib.types.int;
+              description = "Prefix length for the IPv4 address.";
+            };
+          }
+        );
+        default = [
+          {
+            address = "192.168.88.3";
+            prefixLength = 24;
+          }
+        ];
       };
       dhcp = {
         type = lib.types.enum [
@@ -72,25 +82,21 @@
     # Configure interfaces
     networking = {
       # LAN bridge
-      bridges.${config.router.lan.name} = {
-        interfaces = config.router.lan.interfaces;
-      };
+      bridges.${config.router.lan.name}.interfaces = config.router.lan.interfaces;
 
       interfaces = {
         # LAN bridge interface
         ${config.router.lan.name} = {
-          ipv4.addresses = [
-            {
-              address = config.router.lan.addresses;
-              prefixLength = config.router.lan.subnet;
-            }
-          ];
-          ipv4.dhcp = config.router.lan.dhcp;
+          ipv4.addresses = builtins.map (addr: {
+            address = addr.address;
+            prefixLength = addr.prefixLength;
+          }) config.router.lan.addresses;
+          useDHCP = config.router.lan.dhcp == "client";
         };
 
         # WAN interface
         ${config.router.wan.interface} = {
-          ipv4.dhcp = config.router.wan.dhcp;
+          useDHCP = config.router.wan.dhcp == "client";
         };
       };
     };

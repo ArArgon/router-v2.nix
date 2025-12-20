@@ -5,7 +5,7 @@
   ...
 }:
 let
-  hostName = "home-router-v2.home.0xbeef.io";
+  hostName = "home-router-v2";
   user = "router";
 in
 {
@@ -50,6 +50,11 @@ in
     packages = with pkgs; [
       tree
     ];
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAO1//3XGnTf28dsuupRyTA/Zj1S1IICkEPxmymEEAk0"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPF3kG/mLJDfclVHhWXDI2tBpzXwwb1jpz4glRkv+JFG"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL2ZJi0rJNTtaTRUmRFbN7PvPJjhDEA1G5FAhVT1BrVW"
+    ];
   };
 
   environment.systemPackages = with pkgs; [
@@ -84,11 +89,6 @@ in
     settings = {
       UseDns = true;
       PasswordAuthentication = false;
-      openssh.authorizedKeys.keys = [
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAO1//3XGnTf28dsuupRyTA/Zj1S1IICkEPxmymEEAk0"
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPF3kG/mLJDfclVHhWXDI2tBpzXwwb1jpz4glRkv+JFG"
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL2ZJi0rJNTtaTRUmRFbN7PvPJjhDEA1G5FAhVT1BrVW"
-      ];
     };
   };
 

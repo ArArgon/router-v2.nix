@@ -44,14 +44,6 @@
         }
 
         table ip nat {
-          # chain prerouting {
-          #   type nat hook prerouting priority 0;
-          #   policy accept;
-
-          #   # DNS redirection
-          #   iifname "${config.router.lan.name}" meta l4proto {tcp, udp} th dport 53 redirect to ports ${toString config.proxy.dns_server_port} comment "Redirect DNS to local proxy"
-          # }
-
           chain postrouting {
             type nat hook postrouting priority 100;
             policy accept;

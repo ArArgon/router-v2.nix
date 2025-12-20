@@ -14,5 +14,17 @@
           pkgs = import nixpkgs { system = "x86_64-linux"; };
         };
       };
+
+      # This is just for testing/CI - doesn't affect the module export
+      nixosConfigurations.test = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          ./modules
+          {
+            fileSystems."/".device = "/dev/null";
+            fileSystems."/".fsType = "ext4";
+          }
+        ];
+      };
     };
 }
