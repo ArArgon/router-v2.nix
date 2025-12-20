@@ -1,0 +1,7 @@
+{ ... }:
+{
+  imports = [
+    ./networking
+    ./configuration.nix
+  ];
+}
