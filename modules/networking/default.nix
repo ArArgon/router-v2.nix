@@ -74,18 +74,24 @@
       # LAN bridge
       bridges.${config.router.lan.name} = {
         interfaces = config.router.lan.interfaces;
-        ipv4.addresses = [
-          {
-            address = config.router.lan.addresses;
-            prefixLength = config.router.lan.subnet;
-          }
-        ];
-        ipv4.dhcp = config.router.lan.dhcp;
       };
 
-      # WAN interface
-      interfaces.${config.router.wan.interface} = {
-        ipv4.dhcp = config.router.wan.dhcp;
+      interfaces = {
+        # LAN bridge interface
+        ${config.router.lan.name} = {
+          ipv4.addresses = [
+            {
+              address = config.router.lan.addresses;
+              prefixLength = config.router.lan.subnet;
+            }
+          ];
+          ipv4.dhcp = config.router.lan.dhcp;
+        };
+
+        # WAN interface
+        ${config.router.wan.interface} = {
+          ipv4.dhcp = config.router.wan.dhcp;
+        };
       };
     };
   };
