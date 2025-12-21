@@ -46,7 +46,7 @@ let
     }
     {
       name = "geoip-private";
-      url = "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/private.srs";
+      url = "https://testingcf.jsdelivr.net/gh/coco-yan/proxy_ruleset@main/rule/ip_private.srs";
     }
   ];
 
@@ -125,7 +125,7 @@ in
         type = lib.types.listOf lib.types.str;
         description = "List of IP networks assigned to the TUN interface.";
         default = [
-          "192.168.200.1/30"
+          "172.19.0.1/30"
           "fd00:abcd::/64"
         ];
       };
@@ -173,6 +173,11 @@ in
             {
               port = 53;
               action = "hijack-dns";
+            }
+            {
+              ip_is_private = true;
+              action = "route";
+              outbound = directRouteTag;
             }
             {
               rule_set = directSiteRuleSets ++ directIpRuleSets;
