@@ -208,8 +208,10 @@ in
             };
             script = "+${updateScript}";
             wants = [ "network.target" ];
-            after = [ "network-online.target" ];
-            requires = [ "sing-box.service" ];
+            requires = [
+              "sing-box.service"
+              "network-online.target"
+            ];
           };
           sing-box.serviceConfig.ExecStartPre = [ "+${updateScript}" ];
         };
