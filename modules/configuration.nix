@@ -1,11 +1,8 @@
 {
   pkgs,
+  config,
   ...
 }:
-let
-  hostName = "home-router-v2";
-  user = "router";
-in
 {
   # Reference: https://github.com/mitchellh/nixos-config/blob/main/machines/vm-shared.nix
   nix = {
@@ -28,7 +25,7 @@ in
   boot.loader.systemd-boot.consoleMode = "0";
 
   # Define your hostname.
-  networking.hostName = hostName;
+  networking.hostName = config.basic.hostName;
 
   # Set your time zone.
   time.timeZone = "Asia/Hong_Kong";
@@ -42,7 +39,7 @@ in
   services.tailscale.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.users.${user} = {
+  users.users.${config.basic.user} = {
     isNormalUser = true;
     extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
     packages = with pkgs; [

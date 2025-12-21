@@ -15,6 +15,7 @@
       nixosModules = {
         router-v2 = import ./modules {
           inherit pkgs;
+          lib = pkgs.lib;
         };
       };
 
@@ -26,6 +27,10 @@
           {
             fileSystems."/".device = "/dev/null";
             fileSystems."/".fsType = "ext4";
+            basic = {
+              hostName = "test";
+              user = "router";
+            };
           }
         ];
       };
