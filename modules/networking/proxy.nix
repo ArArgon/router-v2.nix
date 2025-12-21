@@ -183,7 +183,7 @@ in
         updateScript = pkgs.writeShellScript "update-sing-box-subscription" ''
           set -euo pipefail
           ${pkgs.curl}/bin/curl -s '${config.proxy.subscription}' \
-          | ${pkgs.jq}/bin/jq '.["outbounds"] | map(."tag" = "${proxiedRouteTag}") | {outbounds: .}' \
+          | ${pkgs.jq}/bin/jq '.["outbounds"] | map(select(has("server"))) | {outbounds: [.[], {type: "urltest", tag: "${proxiedRouteTag}", interrupt_exist_connections: false, outbounds: . | map(.["tag"])}]}' \
           | ${pkgs.coreutils}/bin/tee ${singboxWorkingDir}/${subscriptionJson}
           ${pkgs.coreutils}/bin/chown --reference=${singboxWorkingDir} ${singboxWorkingDir}/${subscriptionJson}
           ${pkgs.procps}/bin/pkill -HUP sing-box || true
