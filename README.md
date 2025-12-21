@@ -3,10 +3,7 @@
 To use it, replace `/etc/nix/flake.nix`:
 
 ```nix
-let
-  hostName = "router-v2";
-  user = "router";
-in {
+{
   inputs = {
     # This is pointing to an unstable release.
     # If you prefer a stable release instead, you can this to the latest number shown here: https://nixos.org/download
@@ -16,23 +13,32 @@ in {
     router-v2.url = "github:ArArgon/router-v2.nix";
     router-v2.inputs.nixpkgs.follows = "nixpkgs";  # Use main flake's nixpkgs
   };
-  outputs = inputs@{ self, nixpkgs, router-v2, ... }: {
-    nixosConfigurations.${hostName} = nixpkgs.lib.nixosSystem {
-      modules = [
-        router-v2.nixosModules.router-v2
-        ./hardware-configuration.nix
+  outputs =
+    inputs@{ self, nixpkgs, router-v2, ... }:
+    let
+      hostName = "router-v2";
+      user = "router";
+    in
+    {
+      nixosConfigurations.${hostName} = nixpkgs.lib.nixosSystem {
+        modules = [
+          router-v2.nixosModules.router-v2
+          ./hardware-configuration.nix
 
-        # Overrides
-        {
-            basic = {
-              inherit hostName user;
-            };
-            # Fill the right interfaces
-            router.lan.interfaces = ["enp2s3"];
-            router.wan.interface = "enp2s2";
-        }
-      ];
+          # Overrides
+          {
+              basic = {
+                inherit hostName user;
+              };
+              # Fill the right interfaces
+              router.lan.interfaces = ["enp2s3"];
+              router.wan.interface = "enp2s2";
+
+              # Proxy subscription
+              proxy.subscription = "https://www.example.org/subscription.json";
+          }
+        ];
+      };
     };
-  };
 }
 ```

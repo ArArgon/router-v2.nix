@@ -10,6 +10,9 @@
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
+
+      testHostName = "test";
+      testUser = "user";
     in
     {
       nixosModules = {
@@ -20,7 +23,7 @@
       };
 
       # This is just for testing/CI - doesn't affect the module export
-      nixosConfigurations.test = nixpkgs.lib.nixosSystem {
+      nixosConfigurations.${testHostName} = nixpkgs.lib.nixosSystem {
         inherit system;
         modules = [
           ./modules
@@ -28,8 +31,8 @@
             fileSystems."/".device = "/dev/null";
             fileSystems."/".fsType = "ext4";
             basic = {
-              hostName = "test";
-              user = "router";
+              hostName = testHostName;
+              user = testUser;
             };
           }
         ];
