@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 let
@@ -56,8 +57,8 @@ let
   mkDirectDns = server: mkDns server directDnsTag "udp";
   mkProxiedDns =
     server:
-    {
-      server = mkDirectDns server;
+    mkDirectDns server
+    // {
       detour = proxiedRouteTag;
     };
 in
@@ -115,6 +116,11 @@ in
         ];
       };
     };
+    subscription = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      description = "Subscription URL for sing-box proxy configuration.";
+      default = null;
+    };
   };
 
   config = {
@@ -167,7 +173,7 @@ in
 
     # systemd timer for proxy subscription updates
     # https://github.com/NixOS/nixpkgs/blob/nixos-25.11/nixos/modules/services/networking/sing-box.nix
-    systemd.timers.sing-box-proxy-subscription-timer = {
+    systemd.timers.sing-box-proxy-subscription-timer = lib.mkIf (!isNull config.proxy.subscription) {
       description = "Update sing-box proxy subscriptions";
       wantedBy = [ "timers.target" ];
       timerConfig = {
@@ -177,16 +183,24 @@ in
       };
     };
 
-    systemd.services.sing-box-proxy-subscription-update = {
+    systemd.services.sing-box-proxy-subscription-update = lib.mkIf (!isNull config.proxy.subscription) {
       description = "Update sing-box proxy subscriptions";
       serviceConfig = {
         Type = "oneshot";
         User = "sing-box";
         Group = "sing-box";
       };
-      script = ''
-        # TODO
-      '';
+      script =
+        let
+          workingDir = "/run/sing-box";
+          jsonPath = "${workingDir}/subscription.json";
+        in
+        ''
+          curl ${config.proxy.subscription} \
+          | jq '.["outbounds"] | map(."tag" = "${proxiedRouteTag}") | {outbounds: .}' \
+          | tee ${jsonPath}
+          chown --reference=/${workingDir} ${jsonPath}
+        '';
       wantedBy = [ "multi-user.target" ];
     };
   };
