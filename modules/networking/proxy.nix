@@ -61,6 +61,12 @@ let
     // {
       detour = proxiedRouteTag;
     };
+
+  hasSubscription = !isNull config.proxy.subscription;
+  subscriptionService = "sing-box-proxy-subscription.service";
+  subscriptionTimer = "sing-box-proxy-subscription.timer";
+  subscriptionWorkingDir = "/run/sing-box";
+  subscriptionJsonPath = "${subscriptionWorkingDir}/subscription.json";
 in
 {
   options.proxy = {
@@ -173,35 +179,38 @@ in
 
     # systemd timer for proxy subscription updates
     # https://github.com/NixOS/nixpkgs/blob/nixos-25.11/nixos/modules/services/networking/sing-box.nix
-    systemd.timers.sing-box-proxy-subscription-timer = lib.mkIf (!isNull config.proxy.subscription) {
+    systemd.timers.${subscriptionTimer} = lib.mkIf hasSubscription {
       description = "Update sing-box proxy subscriptions";
       wantedBy = [ "timers.target" ];
       timerConfig = {
         OnCalendar = "daily";
         Persistent = true;
-        Unit = "sing-box-proxy-subscription-update.service";
+        Unit = subscriptionService;
       };
     };
 
-    systemd.services.sing-box-proxy-subscription-update = lib.mkIf (!isNull config.proxy.subscription) {
-      description = "Update sing-box proxy subscriptions";
+    systemd.services.${subscriptionService} = lib.mkIf hasSubscription {
+      description = "Fetch sing-box proxy subscriptions";
       serviceConfig = {
         Type = "oneshot";
         User = "sing-box";
         Group = "sing-box";
       };
-      script =
-        let
-          workingDir = "/run/sing-box";
-          jsonPath = "${workingDir}/subscription.json";
-        in
-        ''
-          curl ${config.proxy.subscription} \
-          | jq '.["outbounds"] | map(."tag" = "${proxiedRouteTag}") | {outbounds: .}' \
-          | tee ${jsonPath}
-          chown --reference=/${workingDir} ${jsonPath}
-        '';
-      wantedBy = [ "multi-user.target" ];
+      script = ''
+        set -euo pipefail
+        curl -s ${config.proxy.subscription} \
+        | jq '.["outbounds"] | map(."tag" = "${proxiedRouteTag}") | {outbounds: .}' \
+        | tee "${subscriptionJsonPath}"
+        chown --reference=${subscriptionWorkingDir} ${subscriptionJsonPath}
+      '';
+      wants = [ "network.target" ];
+      after = [ "network-online.target" ];
+    };
+
+    systemd.services.sing-box = lib.mkIf hasSubscription {
+      requires = [ subscriptionService ];
+      after = [ subscriptionService ];
+      restartTriggers = [ config.proxy.subscription ];
     };
   };
 }
