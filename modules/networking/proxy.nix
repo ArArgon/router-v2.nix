@@ -63,10 +63,9 @@ let
     };
 
   hasSubscription = !isNull config.proxy.subscription;
-  subscriptionService = "sing-box-proxy-subscription.service";
-  subscriptionTimer = "sing-box-proxy-subscription.timer";
-  subscriptionWorkingDir = "/run/sing-box";
-  subscriptionJsonPath = "${subscriptionWorkingDir}/subscription.json";
+  subscriptionService = "sing-box-proxy-subscription";
+  singboxWorkingDir = config.systemd.services.sing-box.serviceConfig.WorkingDirectory;
+  subscriptionJson = "subscription.json";
 in
 {
   options.proxy = {
@@ -179,13 +178,13 @@ in
 
     # systemd timer for proxy subscription updates
     # https://github.com/NixOS/nixpkgs/blob/nixos-25.11/nixos/modules/services/networking/sing-box.nix
-    systemd.timers.${subscriptionTimer} = lib.mkIf hasSubscription {
+    systemd.timers.${subscriptionService} = lib.mkIf hasSubscription {
       description = "Update sing-box proxy subscriptions";
       wantedBy = [ "timers.target" ];
       timerConfig = {
         OnCalendar = "daily";
         Persistent = true;
-        Unit = subscriptionService;
+        Unit = "${subscriptionService}.service";
       };
     };
 
@@ -195,22 +194,26 @@ in
         Type = "oneshot";
         User = "sing-box";
         Group = "sing-box";
+        WorkingDirectory = singboxWorkingDir;
       };
       script = ''
         set -euo pipefail
-        curl -s ${config.proxy.subscription} \
-        | jq '.["outbounds"] | map(."tag" = "${proxiedRouteTag}") | {outbounds: .}' \
-        | tee "${subscriptionJsonPath}"
-        chown --reference=${subscriptionWorkingDir} ${subscriptionJsonPath}
+        ${pkgs.curl}/bin/curl -s ${config.proxy.subscription} \
+        | ${pkgs.jq}/bin/jq '.["outbounds"] | map(."tag" = "${proxiedRouteTag}") | {outbounds: .}' \
+        | ${pkgs.coreutils}/bin/tee ${subscriptionJson}
+        ${pkgs.coreutils}/bin/chown --reference=${singboxWorkingDir} ${subscriptionJson}
+        ${pkgs.procps}/bin/pkill -HUP sing-box || true
       '';
       wants = [ "network.target" ];
       after = [ "network-online.target" ];
     };
 
     systemd.services.sing-box = lib.mkIf hasSubscription {
-      requires = [ subscriptionService ];
-      after = [ subscriptionService ];
-      restartTriggers = [ config.proxy.subscription ];
+      requires = [ "${subscriptionService}.service" ];
+      after = [ "${subscriptionService}.service" ];
+      serviceConfig.ExecStart = [
+        "${pkgs.sing-box}/bin/sing-box -D \${STATE_DIRECTORY} -C \${RUNTIME_DIRECTORY} -C \${STATE_DIRECTORY} run"
+      ];
     };
   };
 }
