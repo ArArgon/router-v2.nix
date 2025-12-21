@@ -31,7 +31,7 @@ let
     }
     {
       name = "geoip-apple";
-      url = "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/apple.srs";
+      url = "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo-lite/geoip/apple.srs";
     }
     {
       name = "geosite-apple";
@@ -57,7 +57,7 @@ let
   mkDirectDns = server: mkDns server directDnsTag "udp";
   mkProxiedDns =
     server:
-    mkDirectDns server
+    mkDns server proxiedDnsTag "udp"
     // {
       detour = proxiedRouteTag;
     };
@@ -220,7 +220,6 @@ in
           };
           sing-box.serviceConfig.ExecStartPre = [ "+${updateScript}" ];
         };
-
       }
     );
   };
