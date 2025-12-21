@@ -211,7 +211,7 @@ in
             after = [ "network-online.target" ];
             requires = [ "sing-box.service" ];
           };
-          sing-box.serviceConfig.ExecStartPre = "+${updateScript}";
+          sing-box.serviceConfig.ExecStartPre = [ "+${updateScript}" ];
         };
 
       }
