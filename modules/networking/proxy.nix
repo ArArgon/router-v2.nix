@@ -182,7 +182,7 @@ in
         subscriptionJson = "subscription.json";
         updateScript = pkgs.writeShellScript "update-sing-box-subscription" ''
           set -euo pipefail
-          ${pkgs.curl}/bin/curl -s ${config.proxy.subscription} \
+          ${pkgs.curl}/bin/curl -s '${config.proxy.subscription}' \
           | ${pkgs.jq}/bin/jq '.["outbounds"] | map(."tag" = "${proxiedRouteTag}") | {outbounds: .}' \
           | ${pkgs.coreutils}/bin/tee ${singboxWorkingDir}/${subscriptionJson}
           ${pkgs.coreutils}/bin/chown --reference=${singboxWorkingDir} ${singboxWorkingDir}/${subscriptionJson}
@@ -207,7 +207,6 @@ in
               Group = "sing-box";
             };
             script = "+${updateScript}";
-            wants = [ "network.target" ];
             requires = [
               "sing-box.service"
               "network-online.target"
