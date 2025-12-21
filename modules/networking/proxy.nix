@@ -170,6 +170,12 @@ in
           ];
           rule_set = builtins.map mkRuleSet ruleSets;
         };
+        outbounds = [
+          {
+            type = "direct";
+            tag = directRouteTag;
+          }
+        ];
       };
     };
 
