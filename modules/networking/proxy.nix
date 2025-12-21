@@ -9,6 +9,8 @@ let
   directDnsTag = "dns_direct";
   proxiedRouteTag = "proxied";
   directRouteTag = "direct";
+  tunTag = "tun_inbound";
+  socksTag = "socks_inbound";
 
   directSiteRuleSets = [
     "geosite-cn"
@@ -66,6 +68,11 @@ let
 in
 {
   options.proxy = {
+    enable = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Enable sing-box proxy service.";
+    };
     log_level = lib.mkOption {
       type = lib.types.enum [
         "debug"
@@ -125,7 +132,7 @@ in
     };
   };
 
-  config = {
+  config = lib.mkIf config.proxy.enable {
     services.sing-box = {
       enable = true;
       settings = {
@@ -156,6 +163,7 @@ in
             server = directDnsTag;
           };
           final = directRouteTag;
+          default_interface = config.router.wan.interface;
           rules = [
             {
               port = 53;
@@ -174,6 +182,23 @@ in
           {
             type = "direct";
             tag = directRouteTag;
+          }
+        ];
+        inbounds = [
+          {
+            type = "tun";
+            tag = tunTag;
+            interface_name = config.proxy.tun.interface;
+            address = config.proxy.tun.networks;
+            auto_route = true;
+            strict_route = true;
+            auto_redirect = true;
+            route_exclude_address_set = directIpRuleSets;
+          }
+          {
+            type = "socks";
+            tag = socksTag;
+            listen_port = config.proxy.socks_port;
           }
         ];
       };
