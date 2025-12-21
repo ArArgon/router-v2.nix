@@ -20,6 +20,7 @@ let
     "geoip-cn"
     "geoip-apple"
     "geoip-cloudflare"
+    "geoip-private"
   ];
 
   ruleSets = [
@@ -42,6 +43,10 @@ let
     {
       name = "geoip-cloudflare";
       url = "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/cloudflare.srs";
+    }
+    {
+      name = "geoip-private";
+      url = "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/private.srs";
     }
   ];
 
