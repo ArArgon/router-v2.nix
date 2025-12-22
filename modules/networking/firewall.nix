@@ -24,8 +24,8 @@
             # Allow ICMP (ping)
             ip protocol icmp accept comment "Allow ICMP"
 
-            # Allow SSH from specific sources (adjust as needed)
-            iifname "${config.router.lan.name}" tcp dport 22 accept comment "Allow SSH from LAN"
+            # Allow SSH
+            tcp dport 22 accept comment "Allow SSH from LAN"
           }
 
           chain forward {

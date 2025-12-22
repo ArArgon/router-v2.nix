@@ -138,6 +138,13 @@ in
   };
 
   config = lib.mkIf config.proxy.enable {
+    environment.systemPackages = with pkgs; [
+      sing-box
+      jq
+      curl
+      procps
+    ];
+
     services.sing-box = {
       enable = true;
       settings = {
@@ -198,6 +205,7 @@ in
           {
             type = "tun";
             tag = tunTag;
+            stack = "system";
             interface_name = config.proxy.tun.interface;
             address = config.proxy.tun.networks;
             auto_route = true;

@@ -63,11 +63,6 @@
     sysstat
     strace
 
-    # Proxy
-    sing-box
-    mihomo
-    v2ray
-
     # Networking tools
     iproute2
     net-tools
@@ -77,6 +72,10 @@
     tcpdump
     iperf3
     nmap
+
+    # Misc
+    tmux
+    lsof
   ];
 
   services.openssh = {
