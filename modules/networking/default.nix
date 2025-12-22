@@ -52,7 +52,7 @@
           }
         ];
       };
-      dhcp = {
+      dhcp = lib.mkOption {
         type = lib.types.enum [
           "server"
           "client"
