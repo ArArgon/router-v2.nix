@@ -30,8 +30,8 @@
 
             # Allow SSH
             tcp dport 22 accept comment "Allow SSH from LAN"
-            ${lib.optionalString config.vrrp.enable ''
 
+            ${lib.optionalString config.vrrp.enable ''
               # Allow VRRP (protocol 112) for keepalived
               ip protocol 112 accept comment "Allow VRRP"
 

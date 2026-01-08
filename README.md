@@ -1,6 +1,17 @@
 # Router Config
 
-To use it, replace `/etc/nix/flake.nix`:
+A NixOS module for configuring a router with LAN/WAN networking, VRRP high availability, and sing-box proxy capabilities.
+
+## Features
+
+- **Router**: Configure LAN bridge and WAN interface with IPv4/IPv6 support
+- **VRRP**: High availability gateway with keepalived
+- **Proxy**: sing-box with TUN interface, SOCKS5, and subscription support
+- **Firewall**: nftables-based firewall with automatic VRRP protocol support
+
+## Usage
+
+To use this module, reference it in your `/etc/nix/flake.nix`:
 
 ```nix
 {
@@ -13,32 +24,100 @@ To use it, replace `/etc/nix/flake.nix`:
     router-v2.url = "github:ArArgon/router-v2.nix";
     router-v2.inputs.nixpkgs.follows = "nixpkgs";  # Use main flake's nixpkgs
   };
-  outputs =
-    inputs@{ self, nixpkgs, router-v2, ... }:
+
+  outputs = { nixpkgs, router-v2, ... }:
     let
-      hostName = "router-v2";
-      user = "router";
+      hostName = "my-router";
+      user = "admin";
     in
     {
       nixosConfigurations.${hostName} = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
         modules = [
           router-v2.nixosModules.router-v2
           ./hardware-configuration.nix
-
-          # Overrides
           {
-              basic = {
-                inherit hostName user;
-              };
-              # Fill the right interfaces
-              router.lan.interfaces = ["enp2s3"];
-              router.wan.interface = "enp2s2";
+            basic = {
+              inherit hostName user;
+            };
 
-              # Proxy subscription
-              proxy.subscription = "https://www.example.org/subscription.json";
+            # Router configuration
+            router = {
+              lan = {
+                interfaces = [ "eth0" "eth1" ];
+                addresses = [
+                  {
+                    address = "192.168.1.1";
+                    prefixLength = 24;
+                  }
+                ];
+                dhcp = "server";
+              };
+              wan = {
+                interface = "eth2";
+                dhcp = "client";
+              };
+            };
+
+            # Optional: Enable VRRP for high availability gateway
+            vrrp = {
+              enable = true;
+              virtualRouterId = 1;
+              priority = 100;
+              virtualIpAddress = "192.168.1.2";
+            };
+
+            # Optional: Enable sing-box proxy
+            proxy = {
+              enable = true;
+              socks_port = 7890;
+              dns = {
+                proxied = [ "1.1.1.1" "8.8.8.8" ];
+                direct = [ "223.5.5.5" "119.29.29.29" ];
+              };
+              subscription.url = "https://example.com/subscription.json";
+            };
           }
         ];
       };
     };
 }
+```
+
+## Configuration Options
+
+### Router (`router`)
+
+- `lan.name` - LAN bridge interface name
+- `lan.interfaces` - List of physical interfaces to bridge
+- `lan.addresses` - List of IP addresses with `address`, `prefixLength`, and `version` (4 or 6)
+- `lan.dhcp` - DHCP mode: `"server"`, `"client"`, or `"none"`
+- `wan.interface` - WAN interface name
+- `wan.addresses` - List of static IP addresses (optional)
+- `wan.dhcp` - DHCP mode: `"client"` or `"none"`
+
+### VRRP (`vrrp`)
+
+- `enable` - Enable VRRP (default: `false`)
+- `virtualRouterId` - VRRP Virtual Router ID (1-255)
+- `priority` - Router priority (higher = master)
+- `virtualIpAddress` - Shared virtual IP address
+
+### Proxy (`proxy`)
+
+- `enable` - Enable sing-box proxy (default: `false`)
+- `log_level` - Log level: `"debug"`, `"info"`, `"warn"`, `"error"` (default: `"warn"`)
+- `dns.proxied` - DNS servers for proxied traffic
+- `dns.direct` - DNS servers for direct traffic
+- `socks_port` - SOCKS5 proxy port
+- `tun.interface` - TUN interface name (default: `"singbox0"`)
+- `tun.networks` - IP networks for TUN interface
+- `subscription` - Proxy subscription configuration (optional)
+
+## Development
+
+Test the configuration:
+
+```bash
+nix flake check
 ```
