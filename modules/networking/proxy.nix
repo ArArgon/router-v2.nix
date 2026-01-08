@@ -130,9 +130,31 @@ in
       };
     };
     subscription = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      description = "Subscription URL for sing-box proxy configuration.";
-      default = null;
+      type = lib.types.nullOr (
+        lib.types.submodule {
+          options = {
+            url = lib.mkOption {
+              type = lib.types.str;
+              description = "Subscription URL for sing-box proxy configuration.";
+            };
+            fetch_proxy = lib.mkOption {
+              type = lib.types.nullOr lib.types.str;
+              description = "Proxy URL to use when fetching the subscription.";
+              default = null;
+            };
+            on_calendar = lib.mkOption {
+              type = lib.types.str;
+              description = "OnCalendar setting for the subscription update timer.";
+              default = "daily";
+            };
+          };
+        }
+      );
+    };
+    extra_settings = lib.mkOption {
+      type = lib.types.attrs;
+      default = { };
+      description = "Additional custom settings to merge (override) into the sing-box configuration.";
     };
   };
 
@@ -218,37 +240,42 @@ in
             listen_port = config.proxy.socks_port;
           }
         ];
-      };
+      }
+      // config.proxy.extra_settings;
     };
 
     # systemd timer for proxy subscription updates
     # https://github.com/NixOS/nixpkgs/blob/nixos-25.11/nixos/modules/services/networking/sing-box.nix
     systemd = lib.mkIf hasSubscription (
       let
-        subscriptionService = "sing-box-proxy-subscription";
+        subscription = config.proxy.subscription;
+        serviceName = "sing-box-proxy-subscription";
         singboxWorkingDir = "/run/sing-box";
-        subscriptionJson = "subscription.json";
+        jsonFile = "subscription.json";
+        proxy = subscription.fetch_proxy;
+        url = subscription.url;
+        onCalendar = subscription.on_calendar;
         updateScript = pkgs.writeShellScript "update-sing-box-subscription" ''
           set -euo pipefail
-          ${pkgs.curl}/bin/curl -s '${config.proxy.subscription}' \
+          ${pkgs.curl}/bin/curl -s '${url}' ${lib.optionalString (proxy != null) "-x ${proxy}"} \
           | ${pkgs.jq}/bin/jq '.["outbounds"] | map(select(has("server"))) | {outbounds: [.[], {type: "urltest", tag: "${proxiedRouteTag}", interrupt_exist_connections: false, outbounds: . | map(.["tag"])}]}' \
-          > ${singboxWorkingDir}/${subscriptionJson}
-          ${pkgs.coreutils}/bin/chown --reference=${singboxWorkingDir} ${singboxWorkingDir}/${subscriptionJson}
+          > ${singboxWorkingDir}/${jsonFile}
+          ${pkgs.coreutils}/bin/chown --reference=${singboxWorkingDir} ${singboxWorkingDir}/${jsonFile}
           ${pkgs.procps}/bin/pkill -HUP sing-box || true
         '';
       in
       {
-        timers.${subscriptionService} = {
+        timers.${serviceName} = {
           description = "Update sing-box proxy subscriptions";
           wantedBy = [ "timers.target" ];
           timerConfig = {
-            OnCalendar = "daily";
+            OnCalendar = onCalendar;
             Persistent = true;
-            Unit = "${subscriptionService}.service";
+            Unit = "${serviceName}.service";
           };
         };
         services = {
-          ${subscriptionService} = {
+          ${serviceName} = {
             serviceConfig = {
               Type = "oneshot";
               User = "sing-box";

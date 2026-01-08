@@ -65,6 +65,9 @@
         "fd00:abcd::/64"
       ];
     };
-    subscription = "http://example.com/proxy-config";
+    subscription = {
+      url = "http://example.com/proxy-config";
+      fetch_proxy = "http://proxy.example.com:8080";
+    };
   };
 }
