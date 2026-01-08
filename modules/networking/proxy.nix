@@ -208,6 +208,14 @@ in
               outbound = directRouteTag;
             }
             {
+              domain_suffix = [
+                "tailscale.com"
+                "jsdelivr.net"
+              ];
+              action = "route";
+              outbound = directRouteTag;
+            }
+            {
               rule_set = directSiteRuleSets ++ directIpRuleSets;
               invert = true;
               action = "route";
@@ -233,6 +241,7 @@ in
             strict_route = true;
             auto_redirect = true;
             route_exclude_address_set = directIpRuleSets;
+            exclude_uid = [ 0 ]; # exclude root user
           }
           {
             type = "socks";
