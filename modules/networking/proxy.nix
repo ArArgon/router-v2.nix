@@ -280,8 +280,8 @@ in
               Type = "oneshot";
               User = "sing-box";
               Group = "sing-box";
+              ExecStart = [ "+${updateScript}" ];
             };
-            script = "+${updateScript}";
             requires = [
               "sing-box.service"
               "network-online.target"
