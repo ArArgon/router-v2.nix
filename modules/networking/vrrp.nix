@@ -34,6 +34,11 @@
       enable = true;
       # Don't use openFirewall - we'll handle it with nftables
       openFirewall = false;
+      # Non-optional: enforce NixOS compatibility
+      # https://nixos.wiki/wiki/Keepalived
+      extraGlobalDefs = ''
+        use_symlink_paths true
+      '';
 
       vrrpInstances."VIP_${builtins.toString config.vrrp.virtualRouterId}" = {
         interface = config.router.lan.name;
