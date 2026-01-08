@@ -70,7 +70,7 @@ To use this module, reference it in your `/etc/nix/flake.nix`:
             # Optional: Enable sing-box proxy
             proxy = {
               enable = true;
-              socks_port = 7890;
+              socksPort = 7890;
               dns = {
                 proxied = [ "1.1.1.1" "8.8.8.8" ];
                 direct = [ "223.5.5.5" "119.29.29.29" ];
@@ -106,10 +106,10 @@ To use this module, reference it in your `/etc/nix/flake.nix`:
 ### Proxy (`proxy`)
 
 - `enable` - Enable sing-box proxy (default: `false`)
-- `log_level` - Log level: `"debug"`, `"info"`, `"warn"`, `"error"` (default: `"warn"`)
+- `logLevel` - Log level: `"debug"`, `"info"`, `"warn"`, `"error"` (default: `"warn"`)
 - `dns.proxied` - DNS servers for proxied traffic
 - `dns.direct` - DNS servers for direct traffic
-- `socks_port` - SOCKS5 proxy port
+- `socksPort` - SOCKS5 proxy port
 - `tun.interface` - TUN interface name (default: `"singbox0"`)
 - `tun.networks` - IP networks for TUN interface
 - `subscription` - Proxy subscription configuration (optional)

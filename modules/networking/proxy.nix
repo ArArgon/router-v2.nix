@@ -78,7 +78,7 @@ in
       default = false;
       description = "Enable sing-box proxy service.";
     };
-    log_level = lib.mkOption {
+    logLevel = lib.mkOption {
       type = lib.types.enum [
         "debug"
         "info"
@@ -110,7 +110,7 @@ in
         ];
       };
     };
-    socks_port = lib.mkOption {
+    socksPort = lib.mkOption {
       type = lib.types.int;
       description = "Port for the SOCKS5 proxy server.";
     };
@@ -137,12 +137,12 @@ in
               type = lib.types.str;
               description = "Subscription URL for sing-box proxy configuration.";
             };
-            fetch_proxy = lib.mkOption {
+            fetchProxy = lib.mkOption {
               type = lib.types.nullOr lib.types.str;
               description = "Proxy URL to use when fetching the subscription.";
               default = null;
             };
-            on_calendar = lib.mkOption {
+            onCalendar = lib.mkOption {
               type = lib.types.str;
               description = "OnCalendar setting for the subscription update timer.";
               default = "daily";
@@ -151,7 +151,7 @@ in
         }
       );
     };
-    extra_settings = lib.mkOption {
+    extraSettings = lib.mkOption {
       type = lib.types.attrs;
       default = { };
       description = "Additional custom settings to merge (override) into the sing-box configuration.";
@@ -170,7 +170,7 @@ in
       enable = true;
       settings = {
         log = {
-          level = config.proxy.log_level;
+          level = config.proxy.logLevel;
           timestamp = true;
         };
         experimental = {
@@ -237,11 +237,11 @@ in
           {
             type = "socks";
             tag = socksTag;
-            listen_port = config.proxy.socks_port;
+            listen_port = config.proxy.socksPort;
           }
         ];
       }
-      // config.proxy.extra_settings;
+      // config.proxy.extraSettings;
     };
 
     # systemd timer for proxy subscription updates
@@ -252,9 +252,9 @@ in
         serviceName = "sing-box-proxy-subscription";
         singboxWorkingDir = "/run/sing-box";
         jsonFile = "subscription.json";
-        proxy = subscription.fetch_proxy;
+        proxy = subscription.fetchProxy;
         url = subscription.url;
-        onCalendar = subscription.on_calendar;
+        onCalendar = subscription.onCalendar;
         updateScript = pkgs.writeShellScript "update-sing-box-subscription" ''
           set -euo pipefail
           ${pkgs.curl}/bin/curl -s '${url}' ${lib.optionalString (proxy != null) "-x ${proxy}"} \

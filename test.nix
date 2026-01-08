@@ -56,8 +56,8 @@
   # Proxy configuration - enabled with comprehensive settings
   proxy = {
     enable = true;
-    log_level = "info";
-    socks_port = 1080;
+    logLevel = "info";
+    socksPort = 1080;
     tun = {
       interface = "singbox-tun";
       networks = [
@@ -67,7 +67,7 @@
     };
     subscription = {
       url = "http://example.com/proxy-config";
-      fetch_proxy = "http://proxy.example.com:8080";
+      fetchProxy = "http://proxy.example.com:8080";
     };
   };
 }
