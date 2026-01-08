@@ -27,9 +27,8 @@
         inherit system;
         modules = [
           ./modules
+          ./test.nix
           {
-            fileSystems."/".device = "/dev/null";
-            fileSystems."/".fsType = "ext4";
             basic = {
               hostName = testHostName;
               user = testUser;

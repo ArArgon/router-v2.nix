@@ -75,7 +75,7 @@ in
   options.proxy = {
     enable = lib.mkOption {
       type = lib.types.bool;
-      default = true;
+      default = false;
       description = "Enable sing-box proxy service.";
     };
     log_level = lib.mkOption {
@@ -112,7 +112,6 @@ in
     };
     socks_port = lib.mkOption {
       type = lib.types.int;
-      default = 7890;
       description = "Port for the SOCKS5 proxy server.";
     };
     tun = {

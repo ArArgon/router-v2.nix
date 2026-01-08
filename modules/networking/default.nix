@@ -7,6 +7,7 @@
   imports = [
     ./firewall.nix
     ./proxy.nix
+    ./vrrp.nix
   ];
 
   options.router = {
@@ -18,10 +19,6 @@
       };
       interfaces = lib.mkOption {
         type = lib.types.listOf lib.types.str;
-        default = [
-          "eth0"
-          "eth1"
-        ];
         description = "List of physical interfaces to include in the LAN bridge.";
       };
       addresses = lib.mkOption {
@@ -45,12 +42,7 @@
             };
           }
         );
-        default = [
-          {
-            address = "192.168.88.3";
-            prefixLength = 24;
-          }
-        ];
+        description = "List of IP addresses for the LAN bridge.";
       };
       dhcp = lib.mkOption {
         type = lib.types.enum [
@@ -65,7 +57,6 @@
     wan = {
       interface = lib.mkOption {
         type = lib.types.str;
-        default = "eth2";
         description = "Name of the WAN interface.";
       };
       addresses = lib.mkOption {

@@ -1,4 +1,8 @@
-{ config, ... }:
+{
+  config,
+  lib,
+  ...
+}:
 {
   networking = {
     nftables = {
@@ -26,6 +30,14 @@
 
             # Allow SSH
             tcp dport 22 accept comment "Allow SSH from LAN"
+            ${lib.optionalString config.vrrp.enable ''
+
+              # Allow VRRP (protocol 112) for keepalived
+              ip protocol 112 accept comment "Allow VRRP"
+
+              # Allow AH (protocol 51) for keepalived
+              ip protocol 51 accept comment "Allow AH"
+            ''}
           }
 
           chain forward {
