@@ -31,9 +31,12 @@
             # Allow SSH
             tcp dport 22 accept comment "Allow SSH from LAN"
 
+            # Allow DNS
+            meta l4 protocol {tcp, udp} dport 53 accept comment "Allow DNS requests"
+
             # Tailscale traffic
-            ip protocol udp udp dport 41641 accept comment "Allow Tailscale traffic"
-            ip protocol udp udp dport 3478 accept comment "Allow Tailscale STUN traffic"
+            udp dport 41641 accept comment "Allow Tailscale traffic"
+            udp dport 3478 accept comment "Allow Tailscale STUN traffic"
 
             ${lib.optionalString config.vrrp.enable ''
               # Allow VRRP (protocol 112) for keepalived
