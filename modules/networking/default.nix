@@ -42,6 +42,7 @@
             };
           }
         );
+        default = [ ];
         description = "List of IP addresses for the LAN bridge.";
       };
       dhcp = lib.mkOption {
@@ -113,6 +114,8 @@
 
       # Configure interfaces
       networking = {
+        useNetworkd = true;
+
         # LAN bridge
         bridges.${config.router.lan.name}.interfaces = config.router.lan.interfaces;
 
@@ -130,7 +133,11 @@
             ipv6.addresses = mkAddrs config.router.wan.addresses 6;
             useDHCP = config.router.wan.dhcp == "client";
           };
-        };
+        }
+        // (lib.genAttrs config.router.lan.interfaces (ifasce: {
+          # Disable DHCP for interfaces belonging to the bridge
+          useDHCP = false;
+        }));
       };
     };
 }
