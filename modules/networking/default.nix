@@ -114,16 +114,17 @@
       systemd.network = {
         enable = true;
         # Create LAN bridge
-        netdevs."10-${lan.name}" = {
+        netdevs."30-${lan.name}" = {
           netdevConfig = {
             Kind = "bridge";
             Name = lan.name;
+            MACAddress = "none";
           };
         };
 
         networks = {
           # LAN bridge interface
-          "20-${lan.name}" = {
+          "30-${lan.name}" = {
             matchConfig.Name = lan.name;
             address = builtins.map mkAddrs lan.addresses;
             networkConfig = {
@@ -135,7 +136,7 @@
           };
 
           # WAN interface
-          "30-${wan.interface}" = {
+          "40-${wan.interface}" = {
             matchConfig.Name = wan.interface;
             address = builtins.map mkAddrs wan.addresses;
             networkConfig.DHCP = mkDhcp wan;
@@ -145,7 +146,7 @@
         }
         // (lib.listToAttrs (
           lib.imap0 (i: iface: {
-            name = "40-${iface}";
+            name = "30-${iface}";
             value = {
               matchConfig.Name = iface;
               networkConfig.Bridge = lan.name;
