@@ -113,31 +113,53 @@
       };
 
       # Configure interfaces
-      networking = {
-        useNetworkd = true;
+      networking.useNetworkd = true;
+      systemd.network = {
+        enable = true;
+        # Create LAN bridge
+        netdevs."10-${config.router.lan.name}" = {
+          netdevConfig = {
+            Kind = "bridge";
+            Name = config.router.lan.name;
+          };
+        };
 
-        # LAN bridge
-        bridges.${config.router.lan.name}.interfaces = config.router.lan.interfaces;
-
-        interfaces = {
+        networks = {
           # LAN bridge interface
-          ${config.router.lan.name} = {
-            ipv4.addresses = mkAddrs config.router.lan.addresses 4;
-            ipv6.addresses = mkAddrs config.router.lan.addresses 6;
-            useDHCP = config.router.lan.dhcp == "client";
+          "20-${config.router.lan.name}" = {
+            matchConfig.Name = config.router.lan.name;
+            address = builtins.map (
+              addr: "${addr.address}/${toString addr.prefixLength}"
+            ) config.router.lan.addresses;
+            networkConfig = {
+              DHCP = if config.router.lan.dhcp == "client" then "yes" else "no";
+              ConfigureWithoutCarrier = true;
+            };
+            dhcpV4Config.RouteMetric = 200;
+            dhcpV6Config.RouteMetric = 200;
           };
 
           # WAN interface
-          ${config.router.wan.interface} = {
-            ipv4.addresses = mkAddrs config.router.wan.addresses 4;
-            ipv6.addresses = mkAddrs config.router.wan.addresses 6;
-            useDHCP = config.router.wan.dhcp == "client";
+          "30-${config.router.wan.interface}" = {
+            matchConfig.Name = config.router.wan.interface;
+            address = builtins.map (
+              addr: "${addr.address}/${toString addr.prefixLength}"
+            ) config.router.wan.addresses;
+            networkConfig.DHCP = if config.router.wan.dhcp == "client" then "yes" else "no";
+            dhcpV4Config.RouteMetric = 100;
+            dhcpV6Config.RouteMetric = 100;
           };
         }
-        // (lib.genAttrs config.router.lan.interfaces (ifasce: {
-          # Disable DHCP for interfaces belonging to the bridge
-          useDHCP = false;
-        }));
+        // (lib.listToAttrs (
+          lib.imap0 (i: iface: {
+            name = "40-${iface}";
+            value = {
+              matchConfig.Name = iface;
+              networkConfig.Bridge = config.router.lan.name;
+              linkConfig.RequiredForOnline = "enslaved";
+            };
+          }) config.router.lan.interfaces
+        ));
       };
     };
 }
