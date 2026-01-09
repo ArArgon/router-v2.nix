@@ -97,13 +97,10 @@
 
   config =
     let
-      mkAddrs =
-        addrs: version:
-        builtins.map (
-          addr: with addr; {
-            inherit address prefixLength;
-          }
-        ) (builtins.filter (addr: addr.version == version) addrs);
+      mkAddrs = addr: "${addr.address}/${toString addr.prefixLength}";
+      mkDhcp = link: if link.dhcp == "client" then "yes" else "no";
+      lan = config.router.lan;
+      wan = config.router.wan;
     in
     {
       # Enable forwarding
@@ -117,22 +114,20 @@
       systemd.network = {
         enable = true;
         # Create LAN bridge
-        netdevs."10-${config.router.lan.name}" = {
+        netdevs."10-${lan.name}" = {
           netdevConfig = {
             Kind = "bridge";
-            Name = config.router.lan.name;
+            Name = lan.name;
           };
         };
 
         networks = {
           # LAN bridge interface
-          "20-${config.router.lan.name}" = {
-            matchConfig.Name = config.router.lan.name;
-            address = builtins.map (
-              addr: "${addr.address}/${toString addr.prefixLength}"
-            ) config.router.lan.addresses;
+          "20-${lan.name}" = {
+            matchConfig.Name = lan.name;
+            address = builtins.map mkAddrs lan.addresses;
             networkConfig = {
-              DHCP = if config.router.lan.dhcp == "client" then "yes" else "no";
+              DHCP = mkDhcp lan;
               ConfigureWithoutCarrier = true;
             };
             dhcpV4Config.RouteMetric = 200;
@@ -140,12 +135,10 @@
           };
 
           # WAN interface
-          "30-${config.router.wan.interface}" = {
-            matchConfig.Name = config.router.wan.interface;
-            address = builtins.map (
-              addr: "${addr.address}/${toString addr.prefixLength}"
-            ) config.router.wan.addresses;
-            networkConfig.DHCP = if config.router.wan.dhcp == "client" then "yes" else "no";
+          "30-${wan.interface}" = {
+            matchConfig.Name = wan.interface;
+            address = builtins.map mkAddrs wan.addresses;
+            networkConfig.DHCP = mkDhcp wan;
             dhcpV4Config.RouteMetric = 100;
             dhcpV6Config.RouteMetric = 100;
           };
@@ -155,11 +148,16 @@
             name = "40-${iface}";
             value = {
               matchConfig.Name = iface;
-              networkConfig.Bridge = config.router.lan.name;
+              networkConfig.Bridge = lan.name;
               linkConfig.RequiredForOnline = "enslaved";
             };
-          }) config.router.lan.interfaces
+          }) lan.interfaces
         ));
+
+        links."30-${lan.name}" = {
+          matchConfig.OriginalName = lan.name;
+          linkConfig.MACAddressPolicy = "none";
+        };
       };
     };
 }
