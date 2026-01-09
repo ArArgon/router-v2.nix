@@ -32,7 +32,8 @@
             tcp dport 22 accept comment "Allow SSH from LAN"
 
             # Allow DNS
-            meta l4 protocol {tcp, udp} dport 53 accept comment "Allow DNS requests"
+            meta l4proto {tcp, udp} dport 53 accept comment "Allow DNS requests"
+            meta l6proto {tcp, udp} dport 53 accept comment "Allow DNS requests"
 
             # Tailscale traffic
             udp dport 41641 accept comment "Allow Tailscale traffic"
