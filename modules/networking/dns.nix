@@ -74,6 +74,7 @@ in
               ''
                 forward . ${config.proxy.dnsListens.address}:${toString config.proxy.dnsListens.port} {
                   health_check 5s
+                  next SERVFAIL REFUSED
                 }
               ''
             else
