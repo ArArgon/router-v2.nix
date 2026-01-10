@@ -67,6 +67,7 @@ in
       enable = true;
       config = ''
         .:${toString config.dns.port} {
+          whoami
           cache
           ${
             if isProxyEnabled then
