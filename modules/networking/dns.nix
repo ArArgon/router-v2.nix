@@ -80,10 +80,7 @@ in
           ${builtins.concatStringsSep "\n" (builtins.map render config.dns.proxiedServers)}
 
           log
-          errors {
-            consolidate 5m ".* i/o timeout$" warning show_first
-            consolidate 30s "^Failed to .+" error show_first
-          }
+          errors
         }
       '';
     };

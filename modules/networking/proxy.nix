@@ -67,7 +67,7 @@ let
       tag = tag;
       type = protocol;
       server = address;
-      port = port;
+      server_port = port;
     };
   mkDirectDns = server: mkDns server directDnsTag;
   mkProxiedDns =
