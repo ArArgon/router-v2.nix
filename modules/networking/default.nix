@@ -6,6 +6,7 @@
 {
   imports = [
     ./firewall.nix
+    ./dns.nix
     ./proxy.nix
     ./vrrp.nix
   ];

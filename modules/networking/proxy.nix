@@ -56,15 +56,23 @@ let
     format = "binary";
     url = rs.url;
   };
-  mkDns = server: tag: protocol: {
-    tag = tag;
-    type = protocol;
-    server = server;
-  };
-  mkDirectDns = server: mkDns server directDnsTag "udp";
+  mkDns =
+    {
+      address,
+      protocol,
+      port,
+      ...
+    }:
+    tag: {
+      tag = tag;
+      type = protocol;
+      server = address;
+      port = port;
+    };
+  mkDirectDns = server: mkDns server directDnsTag;
   mkProxiedDns =
     server:
-    mkDns server proxiedDnsTag "udp"
+    (mkDns server proxiedDnsTag)
     // {
       detour = proxiedRouteTag;
     };
@@ -88,26 +96,16 @@ in
       default = "warn";
       description = "Log level for sing-box service.";
     };
-    dns = {
-      proxied = lib.mkOption {
-        type = lib.types.listOf (
-          lib.types.str # Will allow passing attributes as well
-        );
-        description = "List of proxied DNS servers for sing-box";
-        default = [
-          "1.1.1.1"
-          "8.8.8.8"
-        ];
+    dnsListens = {
+      address = lib.mkOption {
+        type = lib.types.str;
+        default = "127.0.0.53";
+        description = "Address for sing-box DNS resolved to listen on.";
       };
-      direct = lib.mkOption {
-        type = lib.types.listOf (
-          lib.types.str # Will allow passing attributes as well
-        );
-        description = "List of direct DNS servers for sing-box";
-        default = [
-          "114.114.114.114"
-          "223.5.5.5"
-        ];
+      port = lib.mkOption {
+        type = lib.types.int;
+        default = 53;
+        description = "Port for sing-box DNS resolver to listen on.";
       };
     };
     socksPort = lib.mkOption {
@@ -180,8 +178,8 @@ in
         };
         dns = {
           servers =
-            (builtins.map mkDirectDns config.proxy.dns.direct)
-            ++ (builtins.map mkProxiedDns config.proxy.dns.proxied);
+            (builtins.map mkDirectDns config.dns.directServers)
+            ++ (builtins.map mkProxiedDns config.dns.proxiedServers);
           rules = [
             {
               rule_set = directSiteRuleSets;
@@ -198,10 +196,6 @@ in
           final = directRouteTag;
           default_interface = config.router.wan.interface;
           rules = [
-            {
-              port = 53;
-              action = "hijack-dns";
-            }
             {
               ip_is_private = true;
               action = "route";
@@ -247,6 +241,13 @@ in
             type = "socks";
             tag = socksTag;
             listen_port = config.proxy.socksPort;
+          }
+        ];
+        services = [
+          {
+            type = "resolved";
+            listen = config.proxy.dnsListens.address;
+            listen_port = config.proxy.dnsListens.port;
           }
         ];
       }

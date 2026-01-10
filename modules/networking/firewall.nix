@@ -65,6 +65,10 @@
         table ip nat {
           chain postrouting {
             type nat hook postrouting priority 100;
+            ${lib.optionalString config.dns.hijackDns ''
+              # Redirect all DNS requests to local resolver
+              iifname "${config.router.lan.name}" meta l4proto {tcp, udp} th dport 53 redirect to :${toString config.dns.port} comment "Redirect DNS requests to local resolver"
+            ''}
             policy accept;
 
             # Masquerade LAN traffic going out via WAN
