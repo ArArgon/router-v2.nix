@@ -4,11 +4,16 @@ let
   utils = import ./utils.nix { inherit lib; };
   render = server: ''
     forward . ${
-      if server.protocol == "tls" then "tls://" else ""
+      lib.optionalString (server.protocol == "tls") "tls://"
     }${server.address}:${toString server.port} {
-      ${lib.optionalString (server.protocol == "tls") "tls_servername ${server.tlsDomain}"}
-      ${lib.optionalString (server.protocol == "tcp") "force_tcp"}
-      ${lib.optionalString (server.protocol == "udp") "prefer_udp"}
+      ${
+        {
+          tls = "tls_servername ${server.tlsDomain}";
+          tcp = "force_tcp";
+          udp = "prefer_udp";
+        }
+        .${server.protocol}
+      }
     }
   '';
 in
@@ -53,6 +58,8 @@ in
 
   config = {
     networking.nameservers = [ "127.0.0.1" ];
+    services.resolved.enable = false;
+
     services.coredns = {
       enable = true;
       config = ''
