@@ -99,12 +99,12 @@ in
     dnsListens = {
       address = lib.mkOption {
         type = lib.types.str;
-        default = "127.0.0.53";
+        default = "127.0.0.153";
         description = "Address for sing-box DNS resolved to listen on.";
       };
       port = lib.mkOption {
         type = lib.types.int;
-        default = 53;
+        default = 153;
         description = "Port for sing-box DNS resolver to listen on.";
       };
     };
