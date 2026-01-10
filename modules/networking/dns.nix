@@ -57,8 +57,11 @@ in
   };
 
   config = {
-    networking.nameservers = [ "127.0.0.1" ];
     services.resolved.enable = false;
+    networking = {
+      nameservers = [ "127.0.0.1" ];
+      resolvconf.useLocalResolver = true;
+    };
 
     services.coredns = {
       enable = true;
