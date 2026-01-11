@@ -96,18 +96,6 @@ in
       default = "warn";
       description = "Log level for sing-box service.";
     };
-    dnsListens = {
-      address = lib.mkOption {
-        type = lib.types.str;
-        default = "127.0.0.153";
-        description = "Address for sing-box DNS resolved to listen on.";
-      };
-      port = lib.mkOption {
-        type = lib.types.int;
-        default = 153;
-        description = "Port for sing-box DNS resolver to listen on.";
-      };
-    };
     socksPort = lib.mkOption {
       type = lib.types.int;
       description = "Port for the SOCKS5 proxy server.";
@@ -197,6 +185,10 @@ in
           default_interface = config.router.wan.interface;
           rules = [
             {
+              "port" = 53;
+              "action" = "hijack-dns";
+            }
+            {
               ip_is_private = true;
               action = "route";
               outbound = directRouteTag;
@@ -241,13 +233,6 @@ in
             type = "socks";
             tag = socksTag;
             listen_port = config.proxy.socksPort;
-          }
-        ];
-        services = [
-          {
-            type = "resolved";
-            listen = config.proxy.dnsListens.address;
-            listen_port = config.proxy.dnsListens.port;
           }
         ];
       }

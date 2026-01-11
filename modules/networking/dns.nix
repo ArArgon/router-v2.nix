@@ -49,11 +49,6 @@ in
       default = 53;
       description = "Port for the DNS resolver to listen on.";
     };
-    hijackDns = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Hijack all DNS requests to go through the local DNS resolver.";
-    };
   };
 
   config = {
@@ -69,18 +64,6 @@ in
         .:${toString config.dns.port} {
           whoami
           cache
-          ${
-            if isProxyEnabled then
-              ''
-                forward . ${config.proxy.dnsListens.address}:${toString config.proxy.dnsListens.port} {
-                  health_check 5s
-                  next SERVFAIL REFUSED
-                }
-              ''
-            else
-              ""
-          }
-
           ${builtins.concatStringsSep "\n" (builtins.map render config.dns.directServers)}
           ${builtins.concatStringsSep "\n" (builtins.map render config.dns.proxiedServers)}
 
