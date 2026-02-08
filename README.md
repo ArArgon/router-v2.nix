@@ -4,10 +4,10 @@ A NixOS module for configuring a router with LAN/WAN networking, VRRP high avail
 
 ## Features
 
--   **Router**: Configure LAN bridge and WAN interface with IPv4/IPv6 support
--   **VRRP**: High availability gateway with keepalived
--   **Proxy**: sing-box with TUN interface, SOCKS5, and subscription support
--   **Firewall**: nftables-based firewall with automatic VRRP protocol support
+- **Router**: Configure LAN bridge and WAN interface with IPv4/IPv6 support
+- **VRRP**: High availability gateway with keepalived
+- **Proxy**: sing-box with TUN interface, SOCKS5, and subscription support
+- **Firewall**: nftables-based firewall with automatic VRRP protocol support
 
 ## Usage
 
@@ -20,7 +20,8 @@ To use this module, reference it in your `/etc/nix/flake.nix`:
     # If you prefer a stable release instead, you can this to the latest number shown here: https://nixos.org/download
     # i.e. nixos-24.11
     # Use `nix flake update` to update the flake to the latest revision of the chosen release channel.
-    nixpkgs.url = "git+https://mirrors.tuna.tsinghua.edu.cn/git/nixpkgs.git?ref=nixos-25.11";
+    # nixpkgs.url = "git+https://mirrors.tuna.tsinghua.edu.cn/git/nixpkgs.git?ref=nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     router-v2.url = "github:ArArgon/router-v2.nix";
     router-v2.inputs.nixpkgs.follows = "nixpkgs";  # Use main flake's nixpkgs
   };
@@ -84,29 +85,29 @@ To use this module, reference it in your `/etc/nix/flake.nix`:
 
 ### Router (`router`)
 
--   `lan.name` - LAN bridge interface name
--   `lan.interfaces` - List of physical interfaces to bridge
--   `lan.addresses` - List of IP addresses with `address`, `prefixLength`, and `version` (4 or 6)
--   `lan.dhcp` - DHCP mode: `"server"`, `"client"`, or `"none"`
--   `wan.interface` - WAN interface name
--   `wan.addresses` - List of static IP addresses (optional)
--   `wan.dhcp` - DHCP mode: `"client"` or `"none"`
+- `lan.name` - LAN bridge interface name
+- `lan.interfaces` - List of physical interfaces to bridge
+- `lan.addresses` - List of IP addresses with `address`, `prefixLength`, and `version` (4 or 6)
+- `lan.dhcp` - DHCP mode: `"server"`, `"client"`, or `"none"`
+- `wan.interface` - WAN interface name
+- `wan.addresses` - List of static IP addresses (optional)
+- `wan.dhcp` - DHCP mode: `"client"` or `"none"`
 
 ### VRRP (`vrrp`)
 
--   `enable` - Enable VRRP (default: `false`)
--   `virtualRouterId` - VRRP Virtual Router ID (1-255)
--   `priority` - Router priority (higher = master)
--   `virtualIpAddress` - Shared virtual IP address
+- `enable` - Enable VRRP (default: `false`)
+- `virtualRouterId` - VRRP Virtual Router ID (1-255)
+- `priority` - Router priority (higher = master)
+- `virtualIpAddress` - Shared virtual IP address
 
 ### Proxy (`proxy`)
 
--   `enable` - Enable sing-box proxy (default: `false`)
--   `logLevel` - Log level: `"debug"`, `"info"`, `"warn"`, `"error"` (default: `"warn"`)
--   `socksPort` - SOCKS5 proxy port
--   `tun.interface` - TUN interface name (default: `"singbox0"`)
--   `tun.networks` - IP networks for TUN interface
--   `subscription` - Proxy subscription configuration (optional)
+- `enable` - Enable sing-box proxy (default: `false`)
+- `logLevel` - Log level: `"debug"`, `"info"`, `"warn"`, `"error"` (default: `"warn"`)
+- `socksPort` - SOCKS5 proxy port
+- `tun.interface` - TUN interface name (default: `"singbox0"`)
+- `tun.networks` - IP networks for TUN interface
+- `subscription` - Proxy subscription configuration (optional)
 
 ## Development
 

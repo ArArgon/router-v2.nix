@@ -8,8 +8,15 @@
     firewall = {
       enable = true;
       allowPing = true;
-      allowedTCPPorts = [ 22 53 ];
-      allowedUDPPorts = [ 53 41641 3478 ];
+      allowedTCPPorts = [
+        22
+        53
+      ];
+      allowedUDPPorts = [
+        53
+        41641
+        3478
+      ];
       trustedInterfaces = [ config.router.lan.name ];
       extraInputRules = lib.optionalString config.vrrp.enable ''
         ip protocol 112 accept comment "Allow VRRP"

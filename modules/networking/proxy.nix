@@ -139,14 +139,16 @@ in
       );
     };
     customOutbounds = lib.mkOption {
-      type = lib.types.listOf (lib.types.submodule {
-        freeformType = with lib.types; attrsOf anything;
-        options.tag = lib.mkOption {
-          type = lib.types.str;
-          description = "Unique tag for this outbound. Takes priority over subscription outbounds with the same tag.";
-        };
-      });
-      default = [];
+      type = lib.types.listOf (
+        lib.types.submodule {
+          freeformType = with lib.types; attrsOf anything;
+          options.tag = lib.mkOption {
+            type = lib.types.str;
+            description = "Unique tag for this outbound. Takes priority over subscription outbounds with the same tag.";
+          };
+        }
+      );
+      default = [ ];
       description = "List of custom static proxy outbound configurations. Custom outbounds with the same tag as subscription outbounds take priority.";
     };
     extraSettings = lib.mkOption {
