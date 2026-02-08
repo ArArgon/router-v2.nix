@@ -69,5 +69,15 @@
       url = "http://example.com/proxy-config";
       fetchProxy = "http://proxy.example.com:8080";
     };
+    customOutbounds = [
+      {
+        type = "shadowsocks";
+        tag = "my-server";
+        server = "example.com";
+        server_port = 8388;
+        method = "aes-256-gcm";
+        password = "secret";
+      }
+    ];
   };
 }

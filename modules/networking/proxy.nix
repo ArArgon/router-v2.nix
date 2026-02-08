@@ -8,6 +8,7 @@ let
   proxiedDnsTag = "dns_proxied";
   directDnsTag = "dns_direct";
   proxiedRouteTag = "proxied";
+  subscriptionRouteTag = "subscription";
   directRouteTag = "direct";
   tunTag = "tun_inbound";
   socksTag = "socks_inbound";
@@ -137,6 +138,17 @@ in
         }
       );
     };
+    customOutbounds = lib.mkOption {
+      type = lib.types.listOf (lib.types.submodule {
+        freeformType = with lib.types; attrsOf anything;
+        options.tag = lib.mkOption {
+          type = lib.types.str;
+          description = "Unique tag for this outbound. Takes priority over subscription outbounds with the same tag.";
+        };
+      });
+      default = [];
+      description = "List of custom static proxy outbound configurations. Custom outbounds with the same tag as subscription outbounds take priority.";
+    };
     extraSettings = lib.mkOption {
       type = lib.types.attrs;
       default = { };
@@ -185,8 +197,11 @@ in
           default_interface = config.router.wan.interface;
           rules = [
             {
-              "port" = 53;
-              "action" = "hijack-dns";
+              action = "sniff";
+            }
+            {
+              protocol = "dns";
+              action = "hijack-dns";
             }
             {
               ip_is_private = true;
@@ -210,12 +225,27 @@ in
           ];
           rule_set = builtins.map mkRuleSet ruleSets;
         };
-        outbounds = [
-          {
-            type = "direct";
-            tag = directRouteTag;
-          }
-        ];
+        outbounds =
+          let
+            customOutbounds = config.proxy.customOutbounds;
+            customOutboundTags = map (ob: ob.tag) customOutbounds;
+            proxiedOutboundTags = customOutboundTags ++ lib.optional hasSubscription subscriptionRouteTag;
+          in
+          [
+            {
+              type = "direct";
+              tag = directRouteTag;
+            }
+          ]
+          ++ customOutbounds
+          ++ lib.optionals (proxiedOutboundTags != [ ]) [
+            {
+              type = "urltest";
+              tag = proxiedRouteTag;
+              interrupt_exist_connections = false;
+              outbounds = proxiedOutboundTags;
+            }
+          ];
         inbounds = [
           {
             type = "tun";
@@ -253,7 +283,7 @@ in
         updateScript = pkgs.writeShellScript "update-sing-box-subscription" ''
           set -euo pipefail
           ${pkgs.curl}/bin/curl -s '${url}' ${lib.optionalString (proxy != null) "-x ${proxy}"} \
-          | ${pkgs.jq}/bin/jq '.["outbounds"] | map(select(has("server"))) | {outbounds: [.[], {type: "urltest", tag: "${proxiedRouteTag}", interrupt_exist_connections: false, outbounds: . | map(.["tag"])}]}' \
+          | ${pkgs.jq}/bin/jq '.["outbounds"] | map(select(has("server"))) | {outbounds: [.[], {type: "urltest", tag: "${subscriptionRouteTag}", interrupt_exist_connections: false, outbounds: . | map(.["tag"])}]}' \
           > ${singboxWorkingDir}/${jsonFile}
           ${pkgs.coreutils}/bin/chown --reference=${singboxWorkingDir} ${singboxWorkingDir}/${jsonFile}
           ${pkgs.procps}/bin/pkill -HUP sing-box || true
