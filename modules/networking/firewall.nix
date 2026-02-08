@@ -5,48 +5,22 @@
 }:
 {
   networking = {
+    firewall = {
+      enable = true;
+      allowPing = true;
+      allowedTCPPorts = [ 22 53 ];
+      allowedUDPPorts = [ 53 41641 3478 ];
+      trustedInterfaces = [ config.router.lan.name ];
+      extraInputRules = lib.optionalString config.vrrp.enable ''
+        ip protocol 112 accept comment "Allow VRRP"
+        ip protocol 51 accept comment "Allow AH"
+      '';
+    };
+
     nftables = {
       enable = true;
       ruleset = ''
         table ip filter {
-          chain input {
-            type filter hook input priority 0;
-            policy drop;
-
-            # Allow established and related connections
-            ct state established,related accept comment "Allow established and related connections"
-
-            # Drop invalid packets
-            ct state invalid drop comment "Drop invalid packets"
-
-            # Allow loopback interface
-            iifname "lo" accept comment "Allow loopback interface"
-
-            # Allow LAN traffic
-            iifname "${config.router.lan.name}" accept comment "Allow LAN traffic"
-
-            # Allow ICMP (ping)
-            ip protocol icmp accept comment "Allow ICMP"
-
-            # Allow SSH
-            tcp dport 22 accept comment "Allow SSH from LAN"
-
-            # Allow DNS
-            meta l4proto {tcp, udp} th dport 53 accept comment "Allow DNS requests"
-
-            # Tailscale traffic
-            udp dport 41641 accept comment "Allow Tailscale traffic"
-            udp dport 3478 accept comment "Allow Tailscale STUN traffic"
-
-            ${lib.optionalString config.vrrp.enable ''
-              # Allow VRRP (protocol 112) for keepalived
-              ip protocol 112 accept comment "Allow VRRP"
-
-              # Allow AH (protocol 51) for keepalived
-              ip protocol 51 accept comment "Allow AH"
-            ''}
-          }
-
           chain forward {
             type filter hook forward priority 0;
             policy drop;
