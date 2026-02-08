@@ -49,6 +49,9 @@
             addr = config.vrrp.virtualIpAddress;
           }
         ];
+        extraConfig = "
+        version 3
+        ";
       };
     };
   };
