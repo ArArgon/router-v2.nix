@@ -40,6 +40,12 @@
 
             # Allow forwarding from LAN to WAN
             iifname "${config.router.lan.name}" oifname "${config.router.wan.interface}" accept comment "Allow LAN to WAN forwarding"
+
+            ${lib.optionalString config.proxy.enable ''
+              # Mirror sing-box's OpenWrt fw4 forward rules for TUN interface
+              iifname "${config.proxy.tun.interface}" counter accept comment "Accept forward from TUN"
+              oifname "${config.proxy.tun.interface}" counter accept comment "Accept forward to TUN"
+            ''}
           }
         }
 

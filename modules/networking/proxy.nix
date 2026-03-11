@@ -258,6 +258,7 @@ in
             auto_route = true;
             strict_route = true;
             auto_redirect = true;
+            include_interface = [ config.router.lan.name ];
             route_exclude_address_set = directIpRuleSets;
             exclude_uid = [ 0 ]; # exclude root user
           }

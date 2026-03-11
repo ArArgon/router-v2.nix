@@ -1,21 +1,6 @@
 { config, lib, ... }:
 let
-  isProxyEnabled = config.proxy.enable;
   utils = import ./utils.nix { inherit lib; };
-  render = server: ''
-    forward . ${
-      lib.optionalString (server.protocol == "tls") "tls://"
-    }${server.address}:${toString server.port} {
-      ${
-        {
-          tls = "tls_servername ${server.tlsDomain}";
-          tcp = "force_tcp";
-          udp = "prefer_udp";
-        }
-        .${server.protocol}
-      }
-    }
-  '';
 in
 {
   options.dns = {
@@ -60,17 +45,20 @@ in
 
     services.coredns = {
       enable = true;
-      config = ''
-        .:${toString config.dns.port} {
-          whoami
-          cache
-          ${builtins.concatStringsSep "\n" (builtins.map render config.dns.directServers)}
-          ${builtins.concatStringsSep "\n" (builtins.map render config.dns.proxiedServers)}
-
-          log
-          errors
-        }
-      '';
+      config =
+        let
+          allAddrs = builtins.map (s: s.address) (config.dns.directServers ++ config.dns.proxiedServers);
+          forwardList = builtins.concatStringsSep " " allAddrs;
+        in
+        ''
+          .:${toString config.dns.port} {
+            whoami
+            cache
+            forward . ${forwardList}
+            log
+            errors
+          }
+        '';
     };
   };
 }
